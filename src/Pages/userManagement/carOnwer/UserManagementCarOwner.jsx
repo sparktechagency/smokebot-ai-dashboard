@@ -7,6 +7,7 @@ import {
   useGetAllStoresQuery,
 } from '../../../Redux/storeApis'
 import toast from 'react-hot-toast'
+import { useNavigate } from 'react-router-dom'
 
 const UserManagementCarOwner = () => {
   const [userDetails, setSelectedUser] = useState(null)
@@ -15,6 +16,8 @@ const UserManagementCarOwner = () => {
   const [owners, setOwners] = useState([])
   const [searchQuery, setSearchQuery] = useState('')
   const [page, setPage] = useState(1)
+
+  const navigate = useNavigate()
 
   const {
     data: getAllStoreData,
@@ -41,7 +44,10 @@ const UserManagementCarOwner = () => {
   }, [getAllStoreData])
 
   if (isLoading) return <h1>Loading...</h1>
-  if (isError) return <h1>Something went wrong</h1>
+  if (isError) {
+    navigate('/user-management/business')
+    return
+  }
 
   const handleAction = (record, type) => {
     setSelectedUser(record)
