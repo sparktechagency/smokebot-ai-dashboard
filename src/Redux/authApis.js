@@ -18,7 +18,7 @@ const authApis = baseApis.injectEndpoints({
     }),
     normalUserSignIn: builder.mutation({
       query: (data) => ({
-        url: '/normal-user/create-user',
+        url: '/normal-user/start-chat',
         method: 'POST',
         body: data,
       }),
