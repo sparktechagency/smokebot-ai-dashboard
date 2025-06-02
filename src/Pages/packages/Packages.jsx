@@ -1,7 +1,22 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import SubscriptionCard from './SubscriptionCard'
+import { useGetMyProfileQuery } from '../../Redux/stripeApi'
 
 export default function Packages() {
+  const { data: getData } = useGetMyProfileQuery()
+
+  const [type, setType] = useState('')
+  const [expiryDate, setExpiryDate] = useState('')
+
+  useEffect(() => {
+    if (getData?.data?.packageType) {
+      setType(getData?.data?.packageType)
+      setExpiryDate(getData?.data?.expiryDate)
+    }
+  }, [getData?.data?.packageType, getData?.data?.expiryDate])
+
+  console.log(getData?.data?.packageType)
+
   const [subscriptions, setSubscriptions] = useState([
     {
       id: 1,
@@ -42,6 +57,8 @@ export default function Packages() {
                 <SubscriptionCard
                   key={subscription.id}
                   subscription={subscription}
+                  type={type}
+                  expiryDate={expiryDate}
                 />
               ))}
             </div>

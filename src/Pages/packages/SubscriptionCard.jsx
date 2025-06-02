@@ -7,7 +7,9 @@ import {
   useTrialSubscriptionMutation,
 } from '../../Redux/stripeApi'
 
-function SubscriptionCard({ subscription }) {
+function SubscriptionCard({ subscription, type }) {
+  const navigate = useNavigate()
+  console.log(type)
   const isPremium = subscription.name.toLowerCase().includes('premium')
 
   // usePurchaseSubscriptionMutation, useTrialSubscriptionMutation
@@ -20,6 +22,7 @@ function SubscriptionCard({ subscription }) {
       try {
         const res = await trialSubscription()
         toast.success(res?.error?.data?.message || 'Trial started successfully')
+        navigate('/')
       } catch (error) {
         console.log(error?.error?.data?.message)
         toast.error(error?.error?.data?.message)
@@ -85,15 +88,15 @@ function SubscriptionCard({ subscription }) {
                 {isPremium ? 'PREMIUM' : 'FREE'}
               </div>
               {!isPremium && (
-                <div className="text-white/80 text-sm font-medium">
-                  Validity 5 days
+                <div>
+                  <div className="text-white/80 text-sm font-medium">
+                    Validity 5 days
+                  </div>
                 </div>
               )}
             </div>
 
-            <h2 className="text-2xl font-bold text-white mb-1">
-              {subscription.name}
-            </h2>
+            <h2 className="text-2xl font-bold  mb-1">{subscription.name} </h2>
 
             {/* Animated price */}
             <div className="flex items-end">
@@ -144,33 +147,44 @@ function SubscriptionCard({ subscription }) {
         </div>
 
         {/* Enhanced CTA button */}
-        <div className="p-6 pt-0">
-          <button
-            onClick={() => handleClickChoose(subscription.name)}
-            className={`w-full py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl ${
-              isPremium
-                ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white'
-                : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
-            }`}
-          >
-            <span className="flex items-center justify-center">
-              Continue with {subscription.name}
-              <svg
-                className="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
+        {
+          <div className="p-6 pt-0">
+            <button
+              onClick={() => handleClickChoose(subscription.name)}
+              disabled={type == 'Trial' && !isPremium}
+              className={`w-full ${
+                type == 'Trial' && !isPremium ? 'cursor-not-allowed ' : ''
+              }   py-4 px-6 rounded-xl font-bold text-lg transition-all duration-300 transform hover:scale-105 active:scale-95 shadow-lg hover:shadow-xl ${
+                isPremium
+                  ? 'bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-600 hover:to-orange-600 text-white'
+                  : 'bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white'
+              }`}
+            >
+              <span
+                className={`
+              flex
+              items-center
+              justify-center
+            `}
               >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M13 7l5 5m0 0l-5 5m5-5H6"
-                />
-              </svg>
-            </span>
-          </button>
-        </div>
+                Continue with {subscription.name}
+                <svg
+                  className="ml-2 w-5 h-5 transform group-hover:translate-x-1 transition-transform duration-300"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M13 7l5 5m0 0l-5 5m5-5H6"
+                  />
+                </svg>
+              </span>
+            </button>
+          </div>
+        }
 
         {/* Subtle pattern overlay */}
         <div className="absolute inset-0 opacity-5 pointer-events-none">
