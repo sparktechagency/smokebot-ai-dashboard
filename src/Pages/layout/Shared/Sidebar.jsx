@@ -258,7 +258,7 @@ const Sidebar = () => {
     },
     {
       name: 'Launch SmokeBot',
-      link: '/user-signup',
+      link: '/user-signup-have-account',
       icon: <MdOutlineLaunch />,
     },
   ]

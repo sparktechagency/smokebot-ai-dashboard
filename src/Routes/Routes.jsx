@@ -19,6 +19,7 @@ import InventoryManagement from '../Pages/inventoryManagement/InventoryManagemen
 import UserSignUp from '../Pages/auth/UserSignUp'
 import UserDashboardHome from '../Pages/userDashboardHome/UserDashboardHome'
 import SignUpVerifyCode from '../Pages/auth/SignUpVerifyCode'
+import UserSignUpUserAlreadyHave from '../Pages/auth/UserSignUpUserAlreadyhave'
 
 const router = createBrowserRouter([
   {
@@ -63,6 +64,14 @@ const router = createBrowserRouter([
     element: (
       <AdminRoute>
         <UserSignUp />
+      </AdminRoute>
+    ),
+  },
+  {
+    path: '/user-signup-have-account',
+    element: (
+      <AdminRoute>
+        <UserSignUpUserAlreadyHave />
       </AdminRoute>
     ),
   },
