@@ -19,9 +19,18 @@ const VerifyCode = () => {
   const updateFormValue = (newOtp) => {
     const otpString = newOtp.join('')
     form.setFieldsValue({ otp: otpString })
-    // Clear validation error if OTP is complete
+
+    form.setFields([
+      {
+        name: 'otp',
+        errors: [],
+      },
+    ])
+
     if (otpString.length === 6) {
-      form.validateFields(['otp'])
+      setTimeout(() => {
+        form.validateFields(['otp']).catch(() => {})
+      }, 0)
     }
   }
 
@@ -29,7 +38,6 @@ const VerifyCode = () => {
     const value = e.target.value.replace(/\D/g, '')
 
     if (!value) {
-      // Handle empty input (deletion)
       const newOtp = [...otp]
       newOtp[index] = ''
       setOtp(newOtp)
@@ -51,6 +59,7 @@ const VerifyCode = () => {
     if (e.key === 'Backspace') {
       const newOtp = [...otp]
       if (otp[index]) {
+        // Clear current field
         newOtp[index] = ''
         setOtp(newOtp)
         updateFormValue(newOtp)
@@ -148,12 +157,18 @@ const VerifyCode = () => {
           <Form.Item
             name="otp"
             rules={[
-              { required: true, message: 'Please enter the OTP!' },
               {
                 validator: (_, value) => {
-                  if (value && value.length === 6) {
+                  const currentOtp = otp.join('')
+
+                  if (currentOtp.length === 0) {
+                    return Promise.reject(new Error('Please enter the OTP!'))
+                  }
+
+                  if (currentOtp.length === 6) {
                     return Promise.resolve()
                   }
+
                   return Promise.reject(
                     new Error('Please enter complete 6-digit OTP')
                   )

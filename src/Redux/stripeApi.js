@@ -14,11 +14,20 @@ const storeApis = baseApis.injectEndpoints({
         method: 'POST',
       }),
     }),
+    getMyProfile: builder.query({
+      query: () => ({
+        url: `/user/get-my-profile`,
+        method: 'GET',
+      }),
+    }),
   }),
   overrideExisting: false,
 })
 
-export const { usePurchaseSubscriptionMutation, useTrialSubscriptionMutation } =
-  storeApis
+export const {
+  usePurchaseSubscriptionMutation,
+  useTrialSubscriptionMutation,
+  useGetMyProfileQuery,
+} = storeApis
 
 export default storeApis
