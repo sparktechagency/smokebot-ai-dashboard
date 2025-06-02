@@ -22,7 +22,7 @@ const Navbar = () => {
   }, [timeLeft])
 
   const handleSession = () => {
-    navigate('/user-signup')
+    navigate('/user-signup-have-account')
   }
 
   const formatTime = (seconds) => {
