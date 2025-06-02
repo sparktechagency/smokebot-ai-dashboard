@@ -11,6 +11,15 @@ const Navbar = () => {
   const [timeLeft, setTimeLeft] = useState(300)
 
   useEffect(() => {
+    if (
+      !localStorage.getItem('user-id') &&
+      !localStorage.getItem('phoneNumber')
+    ) {
+      navigate('/user-signup-have-account')
+    }
+  }, [])
+
+  useEffect(() => {
     if (timeLeft <= 0) {
       handleSession()
       return
@@ -23,6 +32,8 @@ const Navbar = () => {
 
   const handleSession = () => {
     navigate('/user-signup-have-account')
+    localStorage.removeItem('phoneNumber')
+    localStorage.removeItem('user-id')
   }
 
   const formatTime = (seconds) => {
@@ -67,7 +78,7 @@ const UserDashboardHome = () => {
   const [conversationActive, setConversationActive] = useState(false)
   const [isProcessing, setIsProcessing] = useState(false)
   const [isUserSpeaking, setIsUserSpeaking] = useState(false)
-  const [soundEnabled, setSoundEnabled] = useState(true) // New state for sound control
+  const [soundEnabled, setSoundEnabled] = useState(true)
   const [postChat] = usePostChatMutation()
 
   const recognitionRef = useRef(null)
