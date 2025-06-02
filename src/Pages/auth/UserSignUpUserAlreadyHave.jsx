@@ -1,10 +1,10 @@
 import { Form, Input, Button, Checkbox } from 'antd'
 import { useNavigate } from 'react-router-dom'
 import toast from 'react-hot-toast'
-import { useState } from 'react'
 import { useNormalUserSignInMutation } from '../../Redux/authApis'
+// import { useState } from 'react'
 
-const UserSignUp = () => {
+const UserSignUpUserAlreadyHave = () => {
   // const navigate = useNavigate()
   // const onFinish = (values) => {
   //   console.log(values)
@@ -19,14 +19,9 @@ const UserSignUp = () => {
   const [postSignIn, { isLoading }] = useNormalUserSignInMutation()
 
   const onFinish = async (values) => {
-    if (!localStorage.getItem('phoneNumber')) {
-      navigate('/user-signup-have-account')
-    }
     try {
       await postSignIn({
-        email: values.email,
-        phone: localStorage.getItem('phoneNumber'),
-        name: values.name,
+        phone: values.phoneNumber,
       })
         .unwrap()
         .then((res) => {
@@ -34,11 +29,13 @@ const UserSignUp = () => {
           form.resetFields()
           console.log(res)
           localStorage.setItem('user-id', res?.data?._id)
+          localStorage.setItem('phoneNumber', values.phoneNumber)
           navigate('/user-smokeBot')
         })
     } catch (error) {
       console.log(error)
-      toast.error(error?.data?.message)
+      localStorage.setItem('phoneNumber', values.phoneNumber)
+      navigate('/user-signup')
     }
   }
 
@@ -51,7 +48,7 @@ const UserSignUp = () => {
         </div>
         <div className="">
           <Form layout="vertical" onFinish={onFinish} className="w-full  mt-5">
-            <label htmlFor="name" className=" text-[16px] ">
+            {/* <label htmlFor="name" className=" text-[16px] ">
               Name
             </label>
             <Form.Item
@@ -62,9 +59,9 @@ const UserSignUp = () => {
                 className="!h-[52px] px-4 rounded-full mt-0"
                 placeholder="Enter your name"
               />
-            </Form.Item>
+            </Form.Item> */}
 
-            {/* <label htmlFor="phoneNumber" className=" text-[16px] ">
+            <label htmlFor="phoneNumber" className=" text-[16px] ">
               Phone Number
             </label>
             <Form.Item
@@ -77,9 +74,9 @@ const UserSignUp = () => {
                 className="!h-[52px] px-4 rounded-full mt-0"
                 placeholder="Enter your phone number"
               />
-            </Form.Item> */}
+            </Form.Item>
 
-            <label htmlFor="email" className=" text-[16px] ">
+            {/* <label htmlFor="email" className=" text-[16px] ">
               Email
             </label>
             <Form.Item
@@ -125,7 +122,7 @@ const UserSignUp = () => {
                   I am at least 21 years old.
                 </Checkbox>
               </Form.Item>
-            </div>
+            </div> */}
 
             <Form.Item>
               <Button
@@ -143,4 +140,4 @@ const UserSignUp = () => {
   )
 }
 
-export default UserSignUp
+export default UserSignUpUserAlreadyHave
