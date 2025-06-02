@@ -19,7 +19,7 @@ import InventoryManagement from '../Pages/inventoryManagement/InventoryManagemen
 import UserSignUp from '../Pages/auth/UserSignUp'
 import UserDashboardHome from '../Pages/userDashboardHome/UserDashboardHome'
 import SignUpVerifyCode from '../Pages/auth/SignUpVerifyCode'
-import UserSignUpUserAlreadyHave from '../Pages/auth/UserSignUpUserAlreadyhave'
+import UserSignUpUserAlreadyHave from '../Pages/auth/UserSignUpUserAlreadyHave'
 
 const router = createBrowserRouter([
   {
