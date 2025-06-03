@@ -79,6 +79,8 @@ const UserDashboardHome = () => {
   const [isProcessing, setIsProcessing] = useState(false)
   const [isUserSpeaking, setIsUserSpeaking] = useState(false)
   const [soundEnabled, setSoundEnabled] = useState(true)
+  const [isMobile, setIsMobile] = useState(false)
+  const [speechSupported, setSpeechSupported] = useState(true)
   const [postChat] = usePostChatMutation()
 
   const recognitionRef = useRef(null)
@@ -86,12 +88,24 @@ const UserDashboardHome = () => {
   const silenceTimerRef = useRef(null)
   const speechTimeoutRef = useRef(null)
   const chatContainerRef = useRef(null)
+  const restartTimeoutRef = useRef(null)
   const [features, setFeatures] = useState([])
   const decodedToken = jwtDecode(localStorage.getItem('token'))
   const { data: getAllFeatures } = useGetAllFeaturesQuery({
     store: decodedToken?.profileId,
     isFeatured: true,
   })
+
+  // Detect mobile device
+  useEffect(() => {
+    const userAgent = navigator.userAgent.toLowerCase()
+    const mobileCheck =
+      /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(
+        userAgent
+      )
+    setIsMobile(mobileCheck)
+    console.log('Mobile device detected:', mobileCheck)
+  }, [])
 
   // Auto scroll to bottom when new messages are added
   useEffect(() => {
@@ -101,11 +115,13 @@ const UserDashboardHome = () => {
   }, [chatHistory])
 
   useEffect(() => {
+    // Check speech recognition support
     if (
       !('SpeechRecognition' in window) &&
       !('webkitSpeechRecognition' in window)
     ) {
       console.error('Speech recognition not supported in this browser')
+      setSpeechSupported(false)
       return
     }
 
@@ -126,6 +142,13 @@ const UserDashboardHome = () => {
       const loadVoices = () => {
         const voices = speechSynthesis.getVoices()
         console.log('Available voices:', voices.length)
+
+        // On mobile, sometimes voices load later
+        if (voices.length === 0 && isMobile) {
+          setTimeout(loadVoices, 1000)
+          return
+        }
+
         voices.forEach((voice, index) => {
           console.log(`${index}: ${voice.name} (${voice.lang})`)
         })
@@ -134,16 +157,14 @@ const UserDashboardHome = () => {
       loadVoices()
       speechSynthesis.onvoiceschanged = loadVoices
     }
-  }, [])
+  }, [isMobile])
 
   const initializeSpeechRecognition = () => {
     if (
       !('SpeechRecognition' in window) &&
       !('webkitSpeechRecognition' in window)
     ) {
-      alert(
-        'Speech recognition is not supported in your browser. Please use Chrome or Edge.'
-      )
+      setSpeechSupported(false)
       return false
     }
 
@@ -151,13 +172,16 @@ const UserDashboardHome = () => {
       window.SpeechRecognition || window.webkitSpeechRecognition
     recognitionRef.current = new SpeechRecognition()
 
-    recognitionRef.current.continuous = true
-    recognitionRef.current.interimResults = true
+    // Mobile-specific settings
+    recognitionRef.current.continuous = !isMobile // Disable continuous mode on mobile
+    recognitionRef.current.interimResults = !isMobile // Disable interim results on mobile
     recognitionRef.current.lang = 'en-US'
+    recognitionRef.current.maxAlternatives = 1
 
     recognitionRef.current.onstart = () => {
       console.log('Speech recognition started')
       setIsListening(true)
+      setIsUserSpeaking(true)
     }
 
     recognitionRef.current.onresult = (event) => {
@@ -191,11 +215,11 @@ const UserDashboardHome = () => {
 
         speechTimeoutRef.current = setTimeout(() => {
           setIsUserSpeaking(false)
-        }, 1500) // User considered done speaking after 1.5 seconds of silence
+        }, 1500)
       }
 
-      // Update display with interim results
-      if (interimTranscript) {
+      // Update display with interim results (only on desktop)
+      if (interimTranscript && !isMobile) {
         setUserMessage(interimTranscript)
       }
 
@@ -211,17 +235,21 @@ const UserDashboardHome = () => {
           clearTimeout(silenceTimerRef.current)
         }
 
-        // Set delay before processing the message
+        // Shorter delay for mobile devices
+        const delay = isMobile ? 500 : 2000
         silenceTimerRef.current = setTimeout(() => {
           if (cleanTranscript.length > 1) {
             processUserMessage(cleanTranscript)
           }
-        }, 2000) // 2 second delay after final speech
+        }, delay)
       }
     }
 
     recognitionRef.current.onerror = (event) => {
       console.error('Speech recognition error:', event.error)
+      setIsListening(false)
+      setIsUserSpeaking(false)
+
       switch (event.error) {
         case 'not-allowed':
           alert(
@@ -229,10 +257,32 @@ const UserDashboardHome = () => {
           )
           break
         case 'no-speech':
-          console.log('No speech detected, continuing...')
+          console.log('No speech detected')
+          // Restart recognition on mobile after no-speech error
+          if (conversationActive && isMobile) {
+            setTimeout(() => {
+              startRecognition()
+            }, 1000)
+          }
+          break
+        case 'aborted':
+          console.log('Speech recognition aborted')
+          break
+        case 'network':
+          console.log('Network error in speech recognition')
+          if (conversationActive) {
+            setTimeout(() => {
+              startRecognition()
+            }, 2000)
+          }
           break
         default:
           console.error('Speech recognition error:', event.error)
+          if (conversationActive) {
+            setTimeout(() => {
+              startRecognition()
+            }, 1000)
+          }
       }
     }
 
@@ -241,11 +291,19 @@ const UserDashboardHome = () => {
       setIsListening(false)
       setIsUserSpeaking(false)
 
+      // Clear any pending restart
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current)
+      }
+
       // Restart recognition if conversation is still active and not processing
       if (conversationActive && !isProcessing && !speaking) {
-        setTimeout(() => {
-          startRecognition()
-        }, 1000)
+        restartTimeoutRef.current = setTimeout(
+          () => {
+            startRecognition()
+          },
+          isMobile ? 500 : 1000
+        ) // Faster restart on mobile
       }
     }
     return true
@@ -253,7 +311,12 @@ const UserDashboardHome = () => {
 
   useEffect(() => {
     if (conversationActive && !speaking && !isProcessing && !isUserSpeaking) {
-      startRecognition()
+      if (restartTimeoutRef.current) {
+        clearTimeout(restartTimeoutRef.current)
+      }
+      restartTimeoutRef.current = setTimeout(() => {
+        startRecognition()
+      }, 500)
     } else if (!conversationActive) {
       stopRecognition()
     }
@@ -261,33 +324,67 @@ const UserDashboardHome = () => {
 
   const startRecognition = async () => {
     try {
+      // Mobile permission handling
       if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) {
         console.error('getUserMedia is not supported in this browser/context')
-        alert('Microphone access requires HTTPS or localhost')
+        if (isMobile) {
+          alert('Please use Chrome or Safari on mobile for voice features')
+        } else {
+          alert('Microphone access requires HTTPS or localhost')
+        }
         return
       }
 
-      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
-      stream.getTracks().forEach((track) => track.stop())
+      // Request microphone permission
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          audio: true,
+        })
+        stream.getTracks().forEach((track) => track.stop())
+      } catch (permissionError) {
+        console.error('Microphone permission denied:', permissionError)
+        alert('Please allow microphone access to use speech recognition')
+        return
+      }
 
       if (recognitionRef.current && !isListening && !speaking) {
-        recognitionRef.current.start()
+        try {
+          recognitionRef.current.start()
+        } catch (startError) {
+          console.error('Failed to start recognition:', startError)
+          // Try again after a short delay
+          setTimeout(() => {
+            if (conversationActive && !isListening && !speaking) {
+              try {
+                recognitionRef.current.start()
+              } catch (retryError) {
+                console.error('Retry failed:', retryError)
+              }
+            }
+          }, 1000)
+        }
       }
     } catch (error) {
-      console.error('Microphone permission denied:', error)
-      alert('Please allow microphone access to use speech recognition')
+      console.error('Start recognition error:', error)
     }
   }
 
   const stopRecognition = () => {
     if (recognitionRef.current) {
-      recognitionRef.current.stop()
+      try {
+        recognitionRef.current.stop()
+      } catch (error) {
+        console.error('Error stopping recognition:', error)
+      }
     }
     if (silenceTimerRef.current) {
       clearTimeout(silenceTimerRef.current)
     }
     if (speechTimeoutRef.current) {
       clearTimeout(speechTimeoutRef.current)
+    }
+    if (restartTimeoutRef.current) {
+      clearTimeout(restartTimeoutRef.current)
     }
     setIsListening(false)
     setIsUserSpeaking(false)
@@ -311,19 +408,16 @@ const UserDashboardHome = () => {
     }
   }
 
-  // New function to toggle sound
   const toggleSound = () => {
     setSoundEnabled((prev) => {
       const newState = !prev
       console.log('Sound toggled to:', newState)
 
-      // If disabling sound while speaking, stop current speech immediately
       if (!newState && speaking && synthRef.current) {
         console.log('Stopping speech due to sound disable')
         synthRef.current.cancel()
         setSpeaking(false)
 
-        // Resume listening after stopping speech
         if (conversationActive && !isProcessing && !isUserSpeaking) {
           setTimeout(() => {
             startRecognition()
@@ -387,14 +481,15 @@ const UserDashboardHome = () => {
 
       setAiResponse(aiMessage)
 
-      // Start text-to-speech after a brief delay - speakText will handle sound check
+      // Start text-to-speech after a brief delay
       setTimeout(() => {
         if (aiMessage && aiMessage.trim()) {
           console.log('Processing AI response for speech/text:', aiMessage)
           speakText(aiMessage)
         } else {
           // If no message, resume listening
-          if (conversationActive && !isProcessing && !isUserSpeaking) {
+          setIsProcessing(false)
+          if (conversationActive && !isUserSpeaking) {
             setTimeout(() => {
               startRecognition()
             }, 500)
@@ -427,38 +522,36 @@ const UserDashboardHome = () => {
       setChatHistory((prev) => [...prev, errorAiMessage])
       setAiResponse(errorMessage)
 
-      // Handle error message speech/text
       setTimeout(() => {
         speakText(errorMessage)
       }, 100)
     } finally {
-      setIsProcessing(false)
+      // Don't set isProcessing to false here, let speakText handle it
     }
   }
 
   useEffect(() => {
-    // When sound is disabled while speaking, ensure we stop
     if (!soundEnabled && speaking && synthRef.current) {
       console.log('Sound disabled - stopping current speech')
       synthRef.current.cancel()
       setSpeaking(false)
+      setIsProcessing(false)
 
-      // Resume listening
-      if (conversationActive && !isProcessing && !isUserSpeaking) {
+      if (conversationActive && !isUserSpeaking) {
         setTimeout(() => {
           startRecognition()
         }, 500)
       }
     }
-  }, [soundEnabled, speaking, conversationActive, isProcessing, isUserSpeaking])
+  }, [soundEnabled, speaking, conversationActive, isUserSpeaking])
 
   const speakText = (text) => {
-    // Check if sound is enabled before speaking
     if (!soundEnabled) {
       console.log('Sound disabled - not speaking')
       setSpeaking(false)
-      // Resume listening immediately when sound is disabled
-      if (conversationActive && !isProcessing && !isUserSpeaking) {
+      setIsProcessing(false)
+
+      if (conversationActive && !isUserSpeaking) {
         setTimeout(() => {
           startRecognition()
         }, 500)
@@ -468,8 +561,9 @@ const UserDashboardHome = () => {
 
     if (!synthRef.current || !text) {
       console.log('Speech synthesis not available or no text provided')
-      // Resume listening if speech synthesis fails
-      if (conversationActive && !isProcessing && !isUserSpeaking) {
+      setIsProcessing(false)
+
+      if (conversationActive && !isUserSpeaking) {
         setTimeout(() => {
           startRecognition()
         }, 500)
@@ -479,8 +573,9 @@ const UserDashboardHome = () => {
 
     if (!('speechSynthesis' in window)) {
       console.error('Speech synthesis not supported in this browser')
-      // Resume listening if speech synthesis not supported
-      if (conversationActive && !isProcessing && !isUserSpeaking) {
+      setIsProcessing(false)
+
+      if (conversationActive && !isUserSpeaking) {
         setTimeout(() => {
           startRecognition()
         }, 500)
@@ -491,70 +586,108 @@ const UserDashboardHome = () => {
     console.log('Speaking text:', text)
     setSpeaking(true)
 
-    // Cancel any ongoing speech
-    synthRef.current.cancel()
-
-    // Create utterance immediately to avoid timing issues
-    const utterance = new SpeechSynthesisUtterance(text)
-    utterance.rate = 0.9
-    utterance.pitch = 1.0
-    utterance.volume = 1.0
-
-    // Try to use a specific voice if available
-    const voices = synthRef.current.getVoices()
-    if (voices.length > 0) {
-      const englishVoice =
-        voices.find(
-          (voice) => voice.lang.startsWith('en') && voice.localService
-        ) || voices[0]
-      utterance.voice = englishVoice
+    // Cancel any ongoing speech - important for mobile
+    if (synthRef.current.speaking) {
+      synthRef.current.cancel()
+      // Wait a bit for cancellation to complete on mobile
+      setTimeout(
+        () => {
+          startSpeaking()
+        },
+        isMobile ? 500 : 100
+      )
+    } else {
+      startSpeaking()
     }
 
-    utterance.onstart = () => {
-      console.log('Speech started')
-      // Double-check sound is still enabled when speech actually starts
-      if (!soundEnabled) {
-        console.log('Sound was disabled after speech started - cancelling')
-        synthRef.current.cancel()
+    function startSpeaking() {
+      const utterance = new SpeechSynthesisUtterance(text)
+      utterance.rate = isMobile ? 0.8 : 0.9 // Slightly slower on mobile
+      utterance.pitch = 1.0
+      utterance.volume = 1.0
+
+      // Voice selection with mobile compatibility
+      const voices = synthRef.current.getVoices()
+      if (voices.length > 0) {
+        let selectedVoice
+
+        if (isMobile) {
+          // On mobile, prefer any English voice
+          selectedVoice =
+            voices.find(
+              (voice) =>
+                voice.lang.startsWith('en') &&
+                (voice.name.toLowerCase().includes('google') ||
+                  voice.name.toLowerCase().includes('samantha') ||
+                  voice.localService)
+            ) ||
+            voices.find((voice) => voice.lang.startsWith('en')) ||
+            voices[0]
+        } else {
+          // Desktop voice selection
+          selectedVoice =
+            voices.find(
+              (voice) => voice.lang.startsWith('en') && voice.localService
+            ) || voices[0]
+        }
+
+        utterance.voice = selectedVoice
+        console.log('Selected voice:', selectedVoice?.name)
+      }
+
+      utterance.onstart = () => {
+        console.log('Speech started')
+        if (!soundEnabled) {
+          console.log('Sound was disabled after speech started - cancelling')
+          synthRef.current.cancel()
+          setSpeaking(false)
+          setIsProcessing(false)
+
+          if (conversationActive && !isUserSpeaking) {
+            setTimeout(() => {
+              startRecognition()
+            }, 500)
+          }
+          return
+        }
+        setSpeaking(true)
+      }
+
+      utterance.onend = () => {
+        console.log('Speech ended')
         setSpeaking(false)
-        if (conversationActive && !isProcessing && !isUserSpeaking) {
+        setIsProcessing(false)
+
+        // Resume listening after AI finishes speaking
+        if (conversationActive && !isUserSpeaking) {
+          setTimeout(
+            () => {
+              startRecognition()
+            },
+            isMobile ? 1000 : 500
+          ) // Longer delay on mobile
+        }
+      }
+
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event)
+        setSpeaking(false)
+        setIsProcessing(false)
+
+        if (conversationActive && !isUserSpeaking) {
           setTimeout(() => {
             startRecognition()
-          }, 500)
+          }, 1000)
         }
-        return
       }
-      setSpeaking(true)
-    }
 
-    utterance.onend = () => {
-      console.log('Speech ended')
-      setSpeaking(false)
-      // Resume listening after AI finishes speaking
-      if (conversationActive && !isProcessing && !isUserSpeaking) {
-        setTimeout(() => {
-          startRecognition()
-        }, 500)
-      }
-    }
-
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event)
-      setSpeaking(false)
-      if (conversationActive && !isProcessing && !isUserSpeaking) {
-        setTimeout(() => {
-          startRecognition()
-        }, 500)
-      }
-    }
-
-    // Wait a bit before starting new speech to ensure cancellation, but check sound state again
-    setTimeout(() => {
-      // Final check if sound is still enabled before actually speaking
+      // Final check before speaking
       if (!soundEnabled) {
         console.log('Sound was disabled while preparing to speak')
         setSpeaking(false)
-        if (conversationActive && !isProcessing && !isUserSpeaking) {
+        setIsProcessing(false)
+
+        if (conversationActive && !isUserSpeaking) {
           setTimeout(() => {
             startRecognition()
           }, 500)
@@ -564,7 +697,7 @@ const UserDashboardHome = () => {
 
       console.log('Calling speechSynthesis.speak()')
       synthRef.current.speak(utterance)
-    }, 100)
+    }
   }
 
   useEffect(() => {
@@ -754,11 +887,11 @@ const UserDashboardHome = () => {
               {(userMessage || aiResponse) && (
                 <div className="mt-2 text-sm text-gray-600">
                   {isUserSpeaking && userMessage ? (
-                    <span className="italic">"{userMessage}"</span>
+                    <span className="italic">{userMessage}</span>
                   ) : (
                     aiResponse && (
                       <span>
-                        Last response: "{aiResponse.substring(0, 100)}..."
+                        Last response: {aiResponse.substring(0, 100)}..."
                       </span>
                     )
                   )}
