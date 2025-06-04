@@ -164,20 +164,26 @@ const InventoryManagement = () => {
       dataIndex: 'name',
       key: 'name',
     },
-    {
-      title: 'Quantity',
-      dataIndex: 'quantity',
-      key: 'quantity',
-    },
+
+    // {
+    //   title: 'Quantity',
+    //   dataIndex: 'quantity',
+    //   key: 'quantity',
+    // },
     {
       title: 'Category',
       dataIndex: 'category',
       key: 'category',
     },
+    // {
+    //   title: 'Price',
+    //   dataIndex: 'price',
+    //   key: 'price',
+    // },
     {
-      title: 'Price',
-      dataIndex: 'price',
-      key: 'price',
+      title: 'Flavor',
+      dataIndex: 'flavour',
+      key: 'flavour',
     },
     {
       title: 'Feature',
@@ -238,8 +244,9 @@ const InventoryManagement = () => {
     editForm.setFieldsValue({
       name: product.name,
       category: product.category,
-      price: product.price,
-      quantity: product.quantity,
+      // price: product.price,
+      // quantity: product.quantity,
+      flavour: product.flavour,
     })
     setIsEditModalVisible(true)
   }
@@ -272,8 +279,9 @@ const InventoryManagement = () => {
         JSON.stringify({
           name: values.name,
           category: values.category,
-          price: values.price,
-          quantity: values.quantity,
+          flavour: values.flavour,
+          // price: values.price,
+          // quantity: values.quantity,
           isFeatured: isFeatureEnabled,
         })
       )
@@ -294,7 +302,7 @@ const InventoryManagement = () => {
         toast.error(res.message || 'Something went wrong')
       }
     } catch (error) {
-      message.error('Please fill out all required fields correctly')
+      toast.error(error?.data?.message)
       console.error(error)
     }
   }
@@ -310,8 +318,10 @@ const InventoryManagement = () => {
         JSON.stringify({
           name: values.name,
           category: values.category,
-          price: values.price,
-          quantity: values.quantity,
+          flavour: values.flavour,
+
+          // price: values.price,
+          // quantity: values.quantity,
           isFeatured: isEditFeatureEnabled,
         })
       )
@@ -495,7 +505,7 @@ const InventoryManagement = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="price"
             label="Price"
             rules={[
@@ -513,14 +523,21 @@ const InventoryManagement = () => {
               min="0"
               placeholder="Enter price"
             />
-          </Form.Item>
+          </Form.Item> */}
 
-          <Form.Item
+          {/* <Form.Item
             name="quantity"
             label="Quantity"
             rules={[{ required: true, message: 'Please enter quantity' }]}
           >
             <Input type="number" min="0" placeholder="Enter quantity" />
+          </Form.Item> */}
+          <Form.Item
+            name="flavour"
+            label="flavour"
+            rules={[{ required: true, message: 'Please enter flavour' }]}
+          >
+            <Input placeholder="Enter flavour" />
           </Form.Item>
 
           <Form.Item label="Feature">
@@ -621,7 +638,7 @@ const InventoryManagement = () => {
             </Select>
           </Form.Item>
 
-          <Form.Item
+          {/* <Form.Item
             name="price"
             label="Price"
             rules={[
@@ -633,14 +650,21 @@ const InventoryManagement = () => {
             ]}
           >
             <Input prefix="$" type="number" step="0.01" min="0" />
-          </Form.Item>
-
+          </Form.Item> */}
+          {/* 
           <Form.Item
             name="quantity"
             label="Quantity"
             rules={[{ required: true, message: 'Please enter quantity' }]}
           >
             <Input type="number" min="0" placeholder="Enter quantity" />
+          </Form.Item> */}
+          <Form.Item
+            name="flavour"
+            label="Flavour"
+            rules={[{ required: true, message: 'Please enter flavour' }]}
+          >
+            <Input placeholder="Enter flavour" />
           </Form.Item>
 
           <Form.Item label="Feature">
