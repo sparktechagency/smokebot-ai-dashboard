@@ -813,9 +813,9 @@ const UserDashboardHome = () => {
                     key={feature?._id}
                   >
                     <p className="text-sm text-gray-700">{feature?.name}</p>
-                    <p className="font-semibold text-green-600">
+                    {/* <p className="font-semibold text-green-600">
                       ${feature?.price}
-                    </p>
+                    </p> */}
                   </div>
                 ))}
               </div>
