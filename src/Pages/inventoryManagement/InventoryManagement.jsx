@@ -6,7 +6,6 @@ import {
   Input,
   Select,
   Upload,
-  message,
   Space,
   Typography,
   Switch,
@@ -17,9 +16,10 @@ import {
   UploadOutlined,
   DeleteOutlined,
   EditOutlined,
+  DownOutlined,
 } from '@ant-design/icons'
-import * as XLSX from 'xlsx'
 
+import { GoDownload } from 'react-icons/go'
 import {
   useCreateProductMutation,
   useDeleteProductMutation,
@@ -32,6 +32,7 @@ import {
   useGetAllCategoriesQuery,
 } from '../../Redux/categoryApis'
 import toast from 'react-hot-toast'
+import { DownloadIcon } from 'lucide-react'
 
 const { Title } = Typography
 const { Option } = Select
@@ -43,6 +44,7 @@ const InventoryManagement = () => {
   const [isDeleteModalVisible, setIsDeleteModalVisible] = useState(false)
   const [currentProduct, setCurrentProduct] = useState(null)
   const [categories, setCategories] = useState([])
+  const [downloadProducts, setDownloadProducts] = useState([])
 
   const [page, setPage] = useState(1)
   const [pageSize, setPageSize] = useState(10)
@@ -64,6 +66,13 @@ const InventoryManagement = () => {
       page,
       limit: 10,
     })
+
+  const {
+    data: getAllProductsForDownload,
+    isLoading: isGetAllProductsLoadingForDownload,
+  } = useGetAllProductsQuery({
+    limit: 999999999999,
+  })
   const [updateProduct, { isLoading: isUpdateProductLoading }] =
     useUpdateProductMutation()
   const [deleteProduct, { isLoading: isDeleteProductLoading }] =
@@ -72,6 +81,7 @@ const InventoryManagement = () => {
   useEffect(() => {
     if (getAllProducts) {
       setProducts(getAllProducts?.data?.result)
+      setDownloadProducts(getAllProductsForDownload?.data?.result)
     }
     if (getAllCategories) {
       setCategories(getAllCategories?.data)
@@ -89,47 +99,6 @@ const InventoryManagement = () => {
     setPageSize(pagination.pageSize)
   }
 
-  // const handleFileUpload = (file) => {
-  //   if (file) {
-  //     const reader = new FileReader()
-  //     reader.onload = (e) => {
-  //       try {
-  //         const data = new Uint8Array(e.target.result)
-  //         const workbook = XLSX.read(data, { type: 'array' })
-  //         console.log(workbook)
-
-  //         const sheetName = workbook.SheetNames[0]
-  //         const worksheet = workbook.Sheets[sheetName]
-
-  //         const json = XLSX.utils.sheet_to_json(worksheet)
-
-  //         const processedData = json.map((item, index) => ({
-  //           ...item,
-  //           key: item.ID || `${index}`,
-  //         }))
-  //         console.log(processedData)
-  //         setProducts(processedData)
-
-  //         const uniqueCategories = [
-  //           ...new Set(processedData.map((item) => item.Category)),
-  //         ].filter(Boolean)
-
-  //         if (uniqueCategories.length > 0) {
-  //           setCategories((prev) => [
-  //             ...new Set([...prev, ...uniqueCategories]),
-  //           ])
-  //         }
-
-  //         message.success(`${file.name} uploaded successfully`)
-  //       } catch (error) {
-  //         console.error('Error parsing Excel file:', error)
-  //         message.error('Failed to parse Excel file. Please check the format.')
-  //       }
-  //     }
-  //     reader.readAsArrayBuffer(file)
-  //   }
-  //   return false
-  // }
   const handleFileUpload = async (file) => {
     console.log(file)
     if (file) {
@@ -378,6 +347,73 @@ const InventoryManagement = () => {
     }
   }
 
+  const handleDownloadFullCSV = () => {
+    if (!downloadProducts || downloadProducts.length === 0) {
+      toast.error('No products available to download')
+      return
+    }
+
+    try {
+      // Define CSV headers with all fields
+      const headers = ['name', 'category', 'flavour', 'featured']
+
+      // Convert products data to CSV format
+      const csvData = downloadProducts.map((product, index) => {
+        return [
+          product.name || '',
+          product.category || '',
+          product.flavour || '',
+          product.isFeatured === true ||
+          product.isFeatured === 'Yes' ||
+          product.isFeatured === 'true'
+            ? 'Yes'
+            : 'No',
+        ]
+      })
+
+      // Combine headers and data
+      const csvContent = [headers, ...csvData]
+        .map((row) =>
+          row
+            .map((field) => {
+              // Handle fields that might contain commas or quotes
+              const stringField = String(field)
+              if (
+                stringField.includes(',') ||
+                stringField.includes('"') ||
+                stringField.includes('\n')
+              ) {
+                return `"${stringField.replace(/"/g, '""')}"`
+              }
+              return `"${stringField}"`
+            })
+            .join(',')
+        )
+        .join('\n')
+
+      // Create blob and download
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+      const link = document.createElement('a')
+
+      if (link.download !== undefined) {
+        const url = URL.createObjectURL(blob)
+        link.setAttribute('href', url)
+        link.setAttribute(
+          'download',
+          `inventory_products_${new Date().toISOString().split('T')[0]}.csv`
+        )
+        link.style.visibility = 'hidden'
+        document.body.appendChild(link)
+        link.click()
+        document.body.removeChild(link)
+        URL.revokeObjectURL(url) // Clean up
+      }
+    } catch (error) {
+      console.error('Error downloading CSV:', error)
+      toast.error('Failed to download CSV file')
+    }
+  }
+
   return (
     <div className="p-4  bg-gray-200 h-screen !font-poppins">
       <div className="bg-white p-6 !rounded-xl ">
@@ -395,6 +431,19 @@ const InventoryManagement = () => {
                 Upload CSV
               </Button>
             </Upload>
+
+            <div>
+              <Button
+                icon={<GoDownload className="!text-xm" />}
+                className="mr-4 !font-poppins"
+                onClick={handleDownloadFullCSV}
+                loading={isGetAllProductsLoading}
+              >
+                {isGetAllProductsLoadingForDownload
+                  ? 'Downloading...'
+                  : 'Download CSV'}
+              </Button>
+            </div>
 
             <Button
               type="primary"

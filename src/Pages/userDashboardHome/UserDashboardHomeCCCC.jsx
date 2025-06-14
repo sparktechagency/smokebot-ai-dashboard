@@ -437,9 +437,7 @@ const UserDashboardHome = () => {
       !message.includes('smoke') &&
       !message.includes('smokebot') &&
       !message.includes('products') &&
-      !message.includes('product') &&
-      !message.includes('bot') &&
-      !message.includes('chatbot')
+      !message.includes('bot')
     ) {
       return
     }
@@ -736,9 +734,9 @@ const UserDashboardHome = () => {
                   <div className="flex items-center justify-center text-gray-400 h-full">
                     <p>
                       Start a new conversation by speaking a command. For
-                      example, for every question use this &quot;smoke&quot; or
+                      example, you can say &quot;smoke&quot; or
                       &quot;smokebot&quot; or &quot;bot&quot; or
-                      &quot;product&quot; keyword.
+                      &quot;product&quot;.
                     </p>
                   </div>
                 ) : (
@@ -902,7 +900,7 @@ const UserDashboardHome = () => {
                   ) : (
                     aiResponse && (
                       <span>
-                        Last response: {aiResponse.substring(0, 100)}...
+                        Last response: {aiResponse.substring(0, 100)}..."
                       </span>
                     )
                   )}
