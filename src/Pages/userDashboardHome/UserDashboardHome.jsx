@@ -439,7 +439,12 @@ const UserDashboardHome = () => {
       !message.includes('products') &&
       !message.includes('product') &&
       !message.includes('bot') &&
-      !message.includes('chatbot')
+      !message.includes('chatbot') &&
+      !message.includes('smoking') &&
+      !message.includes('store') &&
+      !message.includes('flavour') &&
+      !message.includes('feature') &&
+      !message.includes('category')
     ) {
       return
     }
