@@ -35,7 +35,9 @@ const UserSignUpUserAlreadyHave = () => {
     } catch (error) {
       console.log(error)
       localStorage.setItem('phoneNumber', values.phoneNumber)
-      navigate('/user-signup')
+      navigate('/user-signup') 
+
+      
     }
   }
 
