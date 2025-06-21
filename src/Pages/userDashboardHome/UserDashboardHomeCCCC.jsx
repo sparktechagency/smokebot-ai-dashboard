@@ -1,10 +1,10 @@
 import { Mic, MicOff, Volume2, VolumeX, Loader } from 'lucide-react'
 import { useNavigate } from 'react-router-dom'
-import { usePostChatMutation } from '../../Redux/chatApis'
 import { TbLogout } from 'react-icons/tb'
 import { useGetAllFeaturesQuery } from '../../Redux/featuresApis'
 import { jwtDecode } from 'jwt-decode'
 import { useEffect, useRef, useState } from 'react'
+import { usePostChatMutation } from '../../Redux/chatApis'
 
 const Navbar = () => {
   const navigate = useNavigate()
