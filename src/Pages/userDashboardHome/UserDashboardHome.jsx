@@ -97,7 +97,6 @@ const UserDashboardHome = () => {
     isFeatured: true,
   })
 
-  // Detect mobile device
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase()
     const mobileCheck =
@@ -108,7 +107,6 @@ const UserDashboardHome = () => {
     console.log('Mobile device detected:', mobileCheck)
   }, [])
 
-  // Auto scroll to bottom when new messages are added
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight

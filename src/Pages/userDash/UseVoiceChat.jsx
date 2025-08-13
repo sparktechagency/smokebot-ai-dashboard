@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import { usePostChatMutation } from '../../Redux/chatApis'
 
 const UseVoiceChat = () => {
   const [isListening, setIsListening] = useState(false)
@@ -12,6 +13,7 @@ const UseVoiceChat = () => {
   const [soundEnabled, setSoundEnabled] = useState(true)
   const [isMobile, setIsMobile] = useState(false)
   const [noiseLevel, setNoiseLevel] = useState(0)
+  const [postChat] = usePostChatMutation()
 
   const recognitionRef = useRef(null)
   const synthRef = useRef(null)
@@ -19,7 +21,6 @@ const UseVoiceChat = () => {
   const speechTimeoutRef = useRef(null)
   const restartTimeoutRef = useRef(null)
 
-  // Detect mobile device
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase()
     const mobileCheck =
@@ -29,7 +30,6 @@ const UseVoiceChat = () => {
     setIsMobile(mobileCheck)
   }, [])
 
-  // Initialize speech recognition
   useEffect(() => {
     if (
       !('SpeechRecognition' in window) &&
@@ -43,7 +43,7 @@ const UseVoiceChat = () => {
       window.SpeechRecognition || window.webkitSpeechRecognition
     recognitionRef.current = new SpeechRecognition()
 
-    recognitionRef.current.continuous = !isMobile // Continuous only on desktop
+    recognitionRef.current.continuous = !isMobile
     recognitionRef.current.interimResults = true
     recognitionRef.current.lang = 'en-US'
     recognitionRef.current.maxAlternatives = 3
@@ -139,7 +139,6 @@ const UseVoiceChat = () => {
       setIsListening(false)
       setIsUserSpeaking(false)
 
-      // Auto-restart only on desktop for continuous listening
       if (conversationActive && !isProcessing && !speaking && !isMobile) {
         if (restartTimeoutRef.current) {
           clearTimeout(restartTimeoutRef.current)
@@ -198,7 +197,7 @@ const UseVoiceChat = () => {
   }
 
   const processUserMessage = async (message) => {
-    if (!message || message.length < 2 || isProcessing) return
+    if (!message || isProcessing) return
 
     const keywords = [
       'smoke',
@@ -240,10 +239,16 @@ const UseVoiceChat = () => {
       setChatHistory((prev) => [...prev, newUserMessage])
       setUserMessage('')
 
-      // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 1500))
 
-      const aiMessage = `Thank you for asking about "${message}". I'm here to help you with our smoke products and services. How can I assist you further?`
+      const requestData = {
+        userId: localStorage.getItem('user-id'),
+        message: message,
+      }
+
+      const response = await postChat(requestData)
+
+      const aiMessage = response?.data?.data?.aiReply
 
       const newAiMessage = {
         role: 'ai',

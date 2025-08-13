@@ -13,19 +13,10 @@ import VoiceStatusIndicator from './VoiceStatusIndicator'
 import VoiceControlPanel from './VoiceControlPanel'
 import UseVoiceChat from './UseVoiceChat'
 
-const mockFeatures = [
-  { _id: '1', name: 'Premium Cigarettes', price: 12.99 },
-  { _id: '2', name: 'Vaping Devices', price: 45.0 },
-  { _id: '3', name: 'Smoking Accessories', price: 8.5 },
-  { _id: '4', name: 'Lighters Collection', price: 15.25 },
-  { _id: '5', name: 'Rolling Papers', price: 3.99 },
-]
-
 const VoiceChatbotDashboard = () => {
   const {
     isListening,
     userMessage,
-    aiResponse,
     speaking,
     chatHistory,
     conversationActive,
@@ -89,7 +80,7 @@ const VoiceChatbotDashboard = () => {
           </div>
 
           <div className="lg:col-span-1 order-1 lg:order-2">
-            <FeaturesPanel features={mockFeatures} />
+            <FeaturesPanel />
           </div>
         </div>
 

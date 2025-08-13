@@ -78,7 +78,7 @@ const VoiceControlPanel = ({
         )}
 
         {/* Sound Toggle Button */}
-        <div className="flex flex-col items-center">
+        {/* <div className="flex flex-col items-center">
           <button
             onClick={onToggleSound}
             className={`p-4 rounded-full shadow-lg transition-all duration-200 ${
@@ -92,7 +92,7 @@ const VoiceControlPanel = ({
           <span className="text-xs font-medium mt-2 text-gray-600">
             {soundEnabled ? 'Sound On' : 'Sound Off'}
           </span>
-        </div>
+        </div> */}
       </div>
 
       {/* Status Text */}

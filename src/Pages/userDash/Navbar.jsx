@@ -1,16 +1,21 @@
 import { useState, useEffect } from 'react'
 import { Power } from 'lucide-react'
+import { useNavigate } from 'react-router-dom'
 
 const Navbar = () => {
   const [timeLeft, setTimeLeft] = useState(300)
+  const Navigate = useNavigate()
 
   useEffect(() => {
-    if (timeLeft <= 0) return
+    if (timeLeft <= 0) {
+      Navigate(-1)
+      return
+    }
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev - 1)
     }, 1000)
     return () => clearInterval(timer)
-  }, [timeLeft])
+  }, [timeLeft, Navigate])
 
   const formatTime = (seconds) => {
     const mins = Math.floor(seconds / 60)
@@ -37,7 +42,7 @@ const Navbar = () => {
 
           <button
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
-            onClick={() => setTimeLeft(0)}
+            onClick={() => Navigate(-1)}
           >
             <span className="hidden sm:inline">End Session</span>
             <Power size={18} />
