@@ -9,6 +9,8 @@ const Navbar = () => {
   useEffect(() => {
     if (timeLeft <= 0) {
       Navigate(-1)
+      localStorage.removeItem('phoneNumber')
+      localStorage.removeItem('user-id')
       return
     }
     const timer = setInterval(() => {
@@ -21,6 +23,12 @@ const Navbar = () => {
     const mins = Math.floor(seconds / 60)
     const secs = seconds % 60
     return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+  }
+
+  const handleEndSession = () => {
+    Navigate(-1)
+    localStorage.removeItem('phoneNumber')
+    localStorage.removeItem('user-id')
   }
 
   return (
@@ -42,7 +50,7 @@ const Navbar = () => {
 
           <button
             className="bg-white/20 hover:bg-white/30 backdrop-blur-sm text-white px-4 py-2 rounded-lg transition-all duration-200 flex items-center gap-2"
-            onClick={() => Navigate(-1)}
+            onClick={handleEndSession}
           >
             <span className="hidden sm:inline">End Session</span>
             <Power size={18} />

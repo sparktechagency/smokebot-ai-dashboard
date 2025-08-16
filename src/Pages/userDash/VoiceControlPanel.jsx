@@ -15,7 +15,6 @@ const VoiceControlPanel = ({
   isListening,
   speaking,
   onToggleConversation,
-  onToggleSound,
   onStartListening,
   onStopListening,
   isMobile,
@@ -23,7 +22,6 @@ const VoiceControlPanel = ({
   return (
     <div className="bg-white rounded-xl shadow-lg p-6 border">
       <div className="flex flex-col sm:flex-row items-center justify-center space-y-4 sm:space-y-0 sm:space-x-6">
-        {/* Main Voice Toggle Button */}
         <div className="flex flex-col items-center">
           <button
             onClick={onToggleConversation}
@@ -49,7 +47,6 @@ const VoiceControlPanel = ({
           </span>
         </div>
 
-        {/* Manual Listen Button for Mobile */}
         {isMobile && conversationActive && (
           <div className="flex flex-col items-center">
             <button

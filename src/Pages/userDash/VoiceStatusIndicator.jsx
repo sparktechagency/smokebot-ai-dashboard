@@ -61,33 +61,7 @@ const VoiceStatusIndicator = ({
           <span className={`font-medium ${status.color}`}>{status.text}</span>
           {isMobile && <Smartphone size={16} className="text-gray-400" />}
         </div>
-
-        <div className="flex items-center space-x-2">
-          {soundEnabled ? (
-            <Volume2 size={18} className="text-green-600" />
-          ) : (
-            <VolumeX size={18} className="text-red-600" />
-          )}
-        </div>
       </div>
-
-      {/* Noise Level Indicator */}
-      {isListening && (
-        <div className="mt-2">
-          <div className="flex items-center space-x-2">
-            <Waves size={14} className="text-gray-400" />
-            <div className="flex-1 bg-gray-200 rounded-full h-2">
-              <div
-                className="bg-blue-500 h-2 rounded-full transition-all duration-200"
-                style={{ width: `${Math.min(noiseLevel, 100)}%` }}
-              />
-            </div>
-            <span className="text-xs text-gray-500">
-              {Math.round(noiseLevel)}%
-            </span>
-          </div>
-        </div>
-      )}
     </div>
   )
 }

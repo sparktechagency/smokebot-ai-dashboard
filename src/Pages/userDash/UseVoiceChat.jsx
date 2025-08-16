@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react'
 import { usePostChatMutation } from '../../Redux/chatApis'
+import { useNavigate } from 'react-router-dom'
 
 const UseVoiceChat = () => {
+  const navigate = useNavigate()
   const [isListening, setIsListening] = useState(false)
   const [userMessage, setUserMessage] = useState('')
   const [aiResponse, setAiResponse] = useState('')
@@ -22,6 +24,15 @@ const UseVoiceChat = () => {
   const restartTimeoutRef = useRef(null)
 
   useEffect(() => {
+    if (
+      !localStorage.getItem('user-id') &&
+      !localStorage.getItem('phoneNumber')
+    ) {
+      navigate('/user-signup-have-account')
+    }
+  }, [])
+
+  useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase()
     const mobileCheck =
       /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(
@@ -35,7 +46,6 @@ const UseVoiceChat = () => {
       !('SpeechRecognition' in window) &&
       !('webkitSpeechRecognition' in window)
     ) {
-      console.error('Speech recognition not supported')
       return
     }
 
@@ -49,7 +59,6 @@ const UseVoiceChat = () => {
     recognitionRef.current.maxAlternatives = 3
 
     recognitionRef.current.onstart = () => {
-      console.log('Speech recognition started')
       setIsListening(true)
       setIsUserSpeaking(false)
     }
@@ -78,6 +87,7 @@ const UseVoiceChat = () => {
       if (interimTranscript || bestTranscript) {
         setIsUserSpeaking(true)
 
+        // Stop AI speaking immediately when user starts talking
         if (speaking && synthRef.current) {
           synthRef.current.cancel()
           setSpeaking(false)
@@ -98,12 +108,6 @@ const UseVoiceChat = () => {
 
       if (bestTranscript && bestConfidence >= 0.7 && !isProcessing) {
         const cleanTranscript = bestTranscript.trim()
-        console.log(
-          'Processing transcript:',
-          cleanTranscript,
-          'Confidence:',
-          bestConfidence
-        )
 
         setUserMessage(cleanTranscript)
 
@@ -111,19 +115,19 @@ const UseVoiceChat = () => {
           clearTimeout(silenceTimerRef.current)
         }
 
+        // Immediate processing for mobile, delayed for desktop
         silenceTimerRef.current = setTimeout(
           () => {
             if (cleanTranscript.length > 1) {
               processUserMessage(cleanTranscript)
             }
           },
-          isMobile ? 1000 : 2000
+          isMobile ? 500 : 2000 // Faster processing on mobile
         )
       }
     }
 
     recognitionRef.current.onerror = (event) => {
-      console.error('Speech recognition error:', event.error)
       setIsListening(false)
       setIsUserSpeaking(false)
 
@@ -135,7 +139,6 @@ const UseVoiceChat = () => {
     }
 
     recognitionRef.current.onend = () => {
-      console.log('Speech recognition ended')
       setIsListening(false)
       setIsUserSpeaking(false)
 
@@ -160,7 +163,12 @@ const UseVoiceChat = () => {
 
   const startRecognition = () => {
     try {
-      if (recognitionRef.current && !isListening && !speaking) {
+      if (
+        recognitionRef.current &&
+        !isListening &&
+        !speaking &&
+        !isProcessing
+      ) {
         recognitionRef.current.start()
       }
     } catch (error) {
@@ -201,6 +209,7 @@ const UseVoiceChat = () => {
 
     const keywords = [
       'smoke',
+      'smoky',
       'smokebot',
       'products',
       'product',
@@ -220,11 +229,9 @@ const UseVoiceChat = () => {
     )
 
     if (!hasKeyword) {
-      console.log('Message does not contain required keywords:', message)
       return
     }
 
-    console.log('Processing message:', message)
     setIsProcessing(true)
     setIsUserSpeaking(false)
     stopRecognition()
@@ -239,7 +246,7 @@ const UseVoiceChat = () => {
       setChatHistory((prev) => [...prev, newUserMessage])
       setUserMessage('')
 
-      await new Promise((resolve) => setTimeout(resolve, 1500))
+      await new Promise((resolve) => setTimeout(resolve, 800))
 
       const requestData = {
         userId: localStorage.getItem('user-id'),
@@ -264,13 +271,14 @@ const UseVoiceChat = () => {
           speakText(aiMessage)
         } else {
           setIsProcessing(false)
-          if (conversationActive && !isUserSpeaking && !isMobile) {
-            setTimeout(() => startRecognition(), 500)
+          if (conversationActive && !isUserSpeaking) {
+            setTimeout(() => {
+              startRecognition()
+            }, 500)
           }
         }
       }, 200)
     } catch (error) {
-      console.error('Processing error:', error)
       const errorMessage =
         "Sorry, I'm having trouble right now. Please try again."
 
@@ -289,27 +297,28 @@ const UseVoiceChat = () => {
 
   const speakText = (text) => {
     if (!soundEnabled) {
-      console.log('Sound disabled - not speaking')
       setSpeaking(false)
       setIsProcessing(false)
 
-      if (conversationActive && !isUserSpeaking && !isMobile) {
-        setTimeout(() => startRecognition(), 300)
+      if (conversationActive && !isUserSpeaking) {
+        setTimeout(() => {
+          startRecognition()
+        }, 300)
       }
       return
     }
 
     if (!synthRef.current || !text) {
-      console.log('Speech synthesis not available or no text provided')
       setIsProcessing(false)
 
-      if (conversationActive && !isUserSpeaking && !isMobile) {
-        setTimeout(() => startRecognition(), 300)
+      if (conversationActive && !isUserSpeaking) {
+        setTimeout(() => {
+          startRecognition()
+        }, 300)
       }
       return
     }
 
-    console.log('Speaking text:', text)
     setSpeaking(true)
 
     if (synthRef.current.speaking) {
@@ -335,37 +344,42 @@ const UseVoiceChat = () => {
       }
 
       utterance.onstart = () => {
-        console.log('Speech started')
         setSpeaking(true)
       }
 
       utterance.onend = () => {
-        console.log('Speech ended')
         setSpeaking(false)
         setIsProcessing(false)
 
-        if (conversationActive && !isUserSpeaking && !isMobile) {
-          setTimeout(() => startRecognition(), isMobile ? 800 : 500)
+        if (conversationActive && !isUserSpeaking) {
+          setTimeout(
+            () => {
+              startRecognition()
+            },
+            isMobile ? 1000 : 500
+          )
         }
       }
 
       utterance.onerror = (event) => {
-        console.error('Speech synthesis error:', event)
         setSpeaking(false)
         setIsProcessing(false)
 
-        if (conversationActive && !isUserSpeaking && !isMobile) {
-          setTimeout(() => startRecognition(), 1000)
+        if (conversationActive && !isUserSpeaking) {
+          setTimeout(() => {
+            startRecognition()
+          }, 1000)
         }
       }
 
       if (!soundEnabled) {
-        console.log('Sound was disabled while preparing to speak')
         setSpeaking(false)
         setIsProcessing(false)
 
-        if (conversationActive && !isUserSpeaking && !isMobile) {
-          setTimeout(() => startRecognition(), 300)
+        if (conversationActive && !isUserSpeaking) {
+          setTimeout(() => {
+            startRecognition()
+          }, 300)
         }
         return
       }
@@ -390,6 +404,7 @@ const UseVoiceChat = () => {
   const toggleSound = () => {
     setSoundEnabled((prev) => {
       const newState = !prev
+
       if (!newState && speaking && synthRef.current) {
         synthRef.current.cancel()
         setSpeaking(false)
