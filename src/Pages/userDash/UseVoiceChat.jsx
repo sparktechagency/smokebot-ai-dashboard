@@ -23,6 +23,33 @@ const UseVoiceChat = () => {
   const speechTimeoutRef = useRef(null)
   const restartTimeoutRef = useRef(null)
 
+  // Enhanced mobile/tablet detection function
+  const detectMobileDevice = () => {
+    const userAgent = navigator.userAgent.toLowerCase()
+
+    // Basic mobile device detection
+    const basicMobileCheck =
+      /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(
+        userAgent
+      )
+
+    // Enhanced iPad detection (covers newer iPads that report as Mac)
+    const iPadCheck =
+      (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1) ||
+      /ipad/.test(userAgent) ||
+      (navigator.userAgent.includes('Mac') && 'ontouchend' in document)
+
+    // Screen size based detection for tablets
+    const screenCheck =
+      (window.screen.width <= 1024 && window.screen.height <= 1366) ||
+      (window.screen.width <= 1366 && window.screen.height <= 1024)
+
+    // Touch capability check
+    const touchCheck = 'ontouchstart' in window || navigator.maxTouchPoints > 0
+
+    return basicMobileCheck || iPadCheck || (screenCheck && touchCheck)
+  }
+
   useEffect(() => {
     if (
       !localStorage.getItem('user-id') &&
@@ -33,12 +60,21 @@ const UseVoiceChat = () => {
   }, [])
 
   useEffect(() => {
-    const userAgent = navigator.userAgent.toLowerCase()
-    const mobileCheck =
-      /android|webos|iphone|ipad|ipod|blackberry|iemobile|opera mini/.test(
-        userAgent
-      )
-    setIsMobile(mobileCheck)
+    // Use the enhanced detection function
+    setIsMobile(detectMobileDevice())
+
+    // Also add resize listener to detect orientation changes on tablets
+    const handleResize = () => {
+      setIsMobile(detectMobileDevice())
+    }
+
+    window.addEventListener('resize', handleResize)
+    window.addEventListener('orientationchange', handleResize)
+
+    return () => {
+      window.removeEventListener('resize', handleResize)
+      window.removeEventListener('orientationchange', handleResize)
+    }
   }, [])
 
   useEffect(() => {

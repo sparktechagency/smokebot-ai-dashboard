@@ -59,7 +59,9 @@ const VoiceChatbotDashboard = () => {
             <div className="flex items-center space-x-2">
               <Smartphone className="text-blue-600" size={20} />
               <div>
-                <p className="text-blue-800 font-medium">Mobile Voice Chat</p>
+                <p className="text-blue-800 font-medium">
+                  Mobile/Tablet Voice Chat
+                </p>
                 <p className="text-blue-700 text-sm mt-1">
                   Voice chat will listen continuously when activated. Speak
                   clearly and the system will process your voice automatically
@@ -152,7 +154,7 @@ const VoiceChatbotDashboard = () => {
                 <div className="flex items-center space-x-2">
                   <Smartphone size={14} className="text-purple-600" />
                   <span className="text-sm font-medium text-purple-600">
-                    Continuous Mode
+                    Mobile/Tablet Mode
                   </span>
                 </div>
               </>
