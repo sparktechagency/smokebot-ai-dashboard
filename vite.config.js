@@ -47,7 +47,7 @@ export default defineConfig({
   },
 
   // server: {
-  //   host: '10.0.60.187',
+  //   host: '10.10.20.16',
   //   port: 11000,
   // },
 
