@@ -35,6 +35,7 @@ const Navbar = () => {
     const timer = setInterval(() => {
       setTimeLeft((prev) => prev - 1)
     }, 1000)
+    
     return () => clearInterval(timer)
   }, [timeLeft])
 
@@ -126,7 +127,6 @@ const UserDashboardHome = () => {
     isFeatured: true,
   })
 
-  // Detect mobile device
   useEffect(() => {
     const userAgent = navigator.userAgent.toLowerCase()
     const mobileCheck =
@@ -137,7 +137,6 @@ const UserDashboardHome = () => {
     console.log('Mobile device detected:', mobileCheck)
   }, [])
 
-  // Auto scroll to bottom when new messages are added
   useEffect(() => {
     if (chatContainerRef.current) {
       chatContainerRef.current.scrollTop = chatContainerRef.current.scrollHeight
@@ -425,6 +424,7 @@ const UserDashboardHome = () => {
         const delay = isMobile ? 1000 : 2500 // Longer delay for better accuracy
         silenceTimerRef.current = setTimeout(() => {
           if (cleanTranscript.length > 1) {
+            // Don't call stopAudioRecording here - let processUserMessage handle it
             processUserMessage(cleanTranscript)
           }
         }, delay)
@@ -1208,7 +1208,7 @@ const UserDashboardHome = () => {
                 >
                   {soundEnabled ? 'Sound On' : 'Sound Off'}
                 </span>
-              </span>
+              </span>   
             </div>
           </div>
         </div>

@@ -20,6 +20,7 @@ import UserSignUp from '../Pages/auth/UserSignUp'
 import UserDashboardHome from '../Pages/userDashboardHome/UserDashboardHome'
 import SignUpVerifyCode from '../Pages/auth/SignUpVerifyCode'
 import UserSignUpUserAlreadyHave from '../Pages/auth/UserSignUpUserAlreadyHave'
+import VoiceChatbotDashboard from '../Pages/userDash/VoiceChatbotDashboard'
 
 const router = createBrowserRouter([
   {
@@ -79,7 +80,8 @@ const router = createBrowserRouter([
     path: '/user-smokeBot',
     element: (
       <AdminRoute>
-        <UserDashboardHome />
+        <VoiceChatbotDashboard />
+        {/* <UserDashboardHome /> */}
       </AdminRoute>
     ),
   },

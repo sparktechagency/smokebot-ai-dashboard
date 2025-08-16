@@ -43,11 +43,11 @@ export default defineConfig({
   ],
   server: {
     host: '0.0.0.0',
-    port: 4173,
+    port: 5173,
   },
 
   // server: {
-  //   host: '10.0.60.187',
+  //   host: '10.10.20.16',
   //   port: 11000,
   // },
 
