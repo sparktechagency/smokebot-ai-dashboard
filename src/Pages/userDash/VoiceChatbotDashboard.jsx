@@ -61,8 +61,9 @@ const VoiceChatbotDashboard = () => {
               <div>
                 <p className="text-blue-800 font-medium">Mobile Voice Chat</p>
                 <p className="text-blue-700 text-sm mt-1">
-                  For better voice recognition on mobile, use the Push to Talk
-                  button and speak clearly after the beep.
+                  Voice chat will listen continuously when activated. Speak
+                  clearly and the system will process your voice automatically
+                  after you finish speaking.
                 </p>
               </div>
             </div>
@@ -151,7 +152,7 @@ const VoiceChatbotDashboard = () => {
                 <div className="flex items-center space-x-2">
                   <Smartphone size={14} className="text-purple-600" />
                   <span className="text-sm font-medium text-purple-600">
-                    Mobile Mode
+                    Continuous Mode
                   </span>
                 </div>
               </>
@@ -176,10 +177,8 @@ const VoiceChatbotDashboard = () => {
                 </span>
               </div>
               <p className="text-sm text-blue-700">
-                Click the microphone button to start voice chat.
-                {isMobile
-                  ? ' Use "Push to Talk" for better control on mobile.'
-                  : ' It will listen continuously.'}
+                Click the microphone button to start voice chat. It will listen
+                continuously until you turn it off.
               </p>
             </div>
 
@@ -192,7 +191,8 @@ const VoiceChatbotDashboard = () => {
               </div>
               <p className="text-sm text-green-700">
                 Speak clearly and include keywords like smoke, product, bot, or
-                help in your questions.
+                help in your questions. The system will automatically process
+                your speech.
               </p>
             </div>
 
@@ -214,7 +214,8 @@ const VoiceChatbotDashboard = () => {
             <p className="text-sm text-yellow-800">
               <strong>Tip:</strong> For best results, speak in a quiet
               environment and wait for the AI to finish speaking before asking
-              your next question.
+              your next question. The system works continuously on both mobile
+              and desktop.
             </p>
           </div>
         </div>

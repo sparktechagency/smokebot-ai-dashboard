@@ -53,7 +53,8 @@ const UseVoiceChat = () => {
       window.SpeechRecognition || window.webkitSpeechRecognition
     recognitionRef.current = new SpeechRecognition()
 
-    recognitionRef.current.continuous = !isMobile
+    // Changed: Make continuous for both mobile and desktop
+    recognitionRef.current.continuous = true
     recognitionRef.current.interimResults = true
     recognitionRef.current.lang = 'en-US'
     recognitionRef.current.maxAlternatives = 3
@@ -115,14 +116,14 @@ const UseVoiceChat = () => {
           clearTimeout(silenceTimerRef.current)
         }
 
-        // Immediate processing for mobile, delayed for desktop
+        // Changed: Use same delay for both mobile and desktop for consistency
         silenceTimerRef.current = setTimeout(
           () => {
             if (cleanTranscript.length > 1) {
               processUserMessage(cleanTranscript)
             }
           },
-          isMobile ? 500 : 2000 // Faster processing on mobile
+          1500 // Consistent delay for both mobile and desktop
         )
       }
     }
@@ -131,7 +132,8 @@ const UseVoiceChat = () => {
       setIsListening(false)
       setIsUserSpeaking(false)
 
-      if (event.error !== 'aborted' && conversationActive && !isMobile) {
+      // Changed: Auto-restart for both mobile and desktop when conversation is active
+      if (event.error !== 'aborted' && conversationActive) {
         setTimeout(() => {
           startRecognition()
         }, 1000)
@@ -142,7 +144,8 @@ const UseVoiceChat = () => {
       setIsListening(false)
       setIsUserSpeaking(false)
 
-      if (conversationActive && !isProcessing && !speaking && !isMobile) {
+      // Changed: Auto-restart for both mobile and desktop when conversation is active
+      if (conversationActive && !isProcessing && !speaking) {
         if (restartTimeoutRef.current) {
           clearTimeout(restartTimeoutRef.current)
         }
@@ -210,6 +213,7 @@ const UseVoiceChat = () => {
     const keywords = [
       'smoke',
       'smoky',
+      'smokey',
       'smokebot',
       'products',
       'product',
@@ -220,6 +224,7 @@ const UseVoiceChat = () => {
       'buy',
       'purchase',
       'price',
+      'restore',
     ]
     const messageWords = message.toLowerCase().split(' ')
     const hasKeyword = keywords.some((keyword) =>
@@ -395,9 +400,8 @@ const UseVoiceChat = () => {
     } else {
       setConversationActive(true)
       setIsProcessing(false)
-      if (!isMobile) {
-        setTimeout(() => startRecognition(), 1000)
-      }
+      // Changed: Start recognition for both mobile and desktop
+      setTimeout(() => startRecognition(), 1000)
     }
   }
 
@@ -408,12 +412,7 @@ const UseVoiceChat = () => {
       if (!newState && speaking && synthRef.current) {
         synthRef.current.cancel()
         setSpeaking(false)
-        if (
-          conversationActive &&
-          !isProcessing &&
-          !isUserSpeaking &&
-          !isMobile
-        ) {
+        if (conversationActive && !isProcessing && !isUserSpeaking) {
           setTimeout(() => startRecognition(), 500)
         }
       }
